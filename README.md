@@ -53,7 +53,7 @@ The project on your computer will now be able to access your API key without it 
 [A TSV file in the data folder](https://github.com/ronvoluted/moviemadness/blob/tmdb-api/data/all_top_rated_movies_2021-08-28.tsv) contains all 9,040 movies listed in TMDB's "top rated" endpoint. We will work from this file to begin with.
 
 ### Reproducibility
-To recreate the TSV file, take a look at the [`get-top-rated-movies.R` script in the R folder](https://github.com/ronvoluted/moviemadness/blob/tmdb-api/R/get-top-rated-movies.R). It contains functions to let us query some, or all of the "top rate" endpoint. With self-imposed rate limiting added, the ETA for building the entire dataset is 10 minutes.
+To recreate the TSV file, take a look at the [`get-top-rated-movies.R` script in the R folder](https://github.com/ronvoluted/moviemadness/blob/tmdb-api/R/get-top-rated-movies.R). It contains functions to let us query some, or all of the "top rated" endpoint. With self-imposed rate limiting added, the ETA for building the entire dataset is 10 minutes.
 
 ![Console output showing progress of large API query for tope rated movies from TMDB](https://user-images.githubusercontent.com/5785323/131176750-e34af0ff-854a-409e-b0a6-100b5d451628.png "Querying TMDB API for top rated movies")
 
