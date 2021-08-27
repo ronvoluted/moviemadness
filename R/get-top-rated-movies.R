@@ -1,10 +1,6 @@
 # Libraries ----
 
 library(tidyverse)
-library(magrittr)
-library(httr)
-library(keyring)
-library(progress)
 
 
 
