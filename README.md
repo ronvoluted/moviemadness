@@ -41,9 +41,12 @@ remotes::install_github("rstudio/renv")
 _An API key to use has been posted in the Microsoft Teams chat, but ideally you will acquire your own._
 
 1. Register for an account at [The Movie Database](https://www.themoviedb.org)
-2. Find your account's API key on the [Settings > API page](https://www.themoviedb.org/settings/api) under "API Key (v3 auth)"
-3. Run `keyring::key_set('tmdb_api_key')` in the RStudio console
-4. Copy the API key into the window asking for a Password
+2. Request an API key on the [Settings > API page](https://www.themoviedb.org/settings/api) under "Request an API Key" using these details:
+  - Application Name: University of Technology Sydney Project
+  - Application URL: https://github.com/ronvoluted/moviemadness
+  - Application Description: University of Technology Sydney Project
+4. Run `keyring::key_set('tmdb_api_key')` in the RStudio console
+5. Copy the [API key from TMDB](https://www.themoviedb.org/settings/api) into the window asking for a Password
 
 The project on your computer will now be able to access your API key without it being exposed/hardcoded in the files we share.
 
