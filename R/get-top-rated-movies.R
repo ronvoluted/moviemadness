@@ -1,6 +1,8 @@
-# Libraries ----
+# Libraries and sources ----
 
 library(tidyverse)
+source("R/get-movie-details.R")
+source("R/get-movie-cast.R")
 
 
 
@@ -28,6 +30,8 @@ get_top_rated <- function(page = 1, apikey = keyring::key_get('tmdb_api_key')) {
   httr::content(response, 'parsed')[["results"]]
 }
 
+# "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "TV Movie", "Thriller", "War", "Western"
+
 # Save any number of pages of results to TSV and display progress
 
 save_top_rated <- function(range=5, start=1, filename="top_rated_movies.tsv") {
@@ -39,11 +43,18 @@ save_top_rated <- function(range=5, start=1, filename="top_rated_movies.tsv") {
     count[["total_results"]] = range * 20
   }
 
-  # Set order for column headers
+  # Set column headers
+  # `columns` contains fields returned from the API endpoint
+  # `genres`, tagline, runtime, budget and revenue fields are appended from separate endpoints
+
   columns <- list("id", "title", "original_title", "overview", "release_date", "original_language", "genre_ids", "adult", "poster_path", "backdrop_path", "popularity", "vote_count", "vote_average", "video")
 
+  genres <- list("Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "TV Movie", "Thriller", "War", "Western")
+
+  columns_appended <- c(columns, "tagline", "runtime", "budget", "revenue", genres)
+
   # Create empty TSV file with only column headers
-  write.table(columns, filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+  write.table(columns_appended, filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
 
   # Initialise progress bar for console output
   pb <- progress::progress_bar$new(
@@ -56,6 +67,28 @@ save_top_rated <- function(range=5, start=1, filename="top_rated_movies.tsv") {
 
     for (result in results_page) {
       result <- result[unlist(columns)]
+
+      # Get further movie details from separate endpoint
+      details <- get_movie_details(result[["id"]])
+
+      # Append expanded details to current result
+
+      result["tagline"] <- details[["tagline"]]
+      result["runtime"] <- details[["runtime"]]
+      result["budget"] <- details[["budget"]]
+      result["revenue"] <- details[["revenue"]]
+
+      genre_names <- lapply(details[["genres"]], function(genre) {
+        genre[["name"]]
+      })
+
+      for (genre in genres) {
+        if (is.na(match(genre, genre_names))) {
+          result[genre] <- FALSE
+        } else {
+          result[genre] <- TRUE
+        }
+      }
 
       # Parse the genre field which is a list, into a character
       result["genre_ids"] <- paste(result[["genre_ids"]], collapse=", ")
@@ -81,7 +114,7 @@ save_top_rated <- function(range=5, start=1, filename="top_rated_movies.tsv") {
     pb$tick(tokens=list(results=i*20, result_total=count[["total_results"]], pages=i, page_total=count[["total_pages"]]))
 
     # While TMDB explicitly places no restrictions, rate limit the request out of courtesy
-    Sys.sleep(1)
+    Sys.sleep(5)
   }
 }
 
