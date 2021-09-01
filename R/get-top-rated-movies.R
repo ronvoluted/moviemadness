@@ -30,8 +30,6 @@ get_top_rated <- function(page = 1, apikey = keyring::key_get('tmdb_api_key')) {
   httr::content(response, 'parsed')[["results"]]
 }
 
-# "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "TV Movie", "Thriller", "War", "Western"
-
 # Save any number of pages of results to TSV and display progress
 
 save_top_rated <- function(range=5, start=1, filename="top_rated_movies.tsv") {
