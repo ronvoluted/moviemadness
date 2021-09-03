@@ -1,0 +1,263 @@
+---
+title: "STDS GROUP ASSIGNMENT"
+output: html_document
+---
+
+
+
+
+#Importing the relevant libraries to do the analysis.
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(Rcpp)
+library(corrplot)
+library(reshape)
+library(evaluate)
+library(ROCR)
+library(rpart)
+library(rpart.plot)
+library(mlbench)
+library(DataExplorer)
+library(corrplot)
+library(pROC)
+library(lubridate)
+```
+
+
+#IMPORTING THE DATASET
+
+```{r}
+setwd("~/STDS ASSIGNMENT")
+movies <- read_tsv("all_top_rated_movies_2021-09-01.tsv.txt")
+```
+
+###############################################################
+# DATA UNDERSTANDING
+###############################################################
+```{r}
+# Check the structure of the raw data
+str(movies)
+
+# Check the summary of the raw data
+summary(movies)
+```
+
+
+#Get overall insights using this command.
+create_report(movies)
+#Good source to see histograms, data structures, missing values etc. 
+
+
+###############################################################
+# DATA CLEANING
+###############################################################
+
+```{r}
+#Checking the missing values. Here, this shows the missing values for each attrbiute.
+colSums(is.na(movies))
+# There are 15 missing values in the column overview and 2 missing values in genre ID. so I'm going to remove those columns.
+movies=  na.omit(movies)
+#checking the duplicate values.
+duplicated(movies)
+which(duplicated(movies))
+# The dataset have 15 duplicated values.
+#Removing the duplicate values.
+ movies[!duplicated(movies), ]
+
+
+
+
+```
+##################################################################
+## EXPLORATORY DATA ANALYSIS###
+##################################################################
+1. checking the first 20 popular movies.
+```{r}
+#Checking the top 20 popular movies.
+top_20_movies <- head(movies[order(movies$popularity, decreasing = TRUE), c("title", "popularity")], n = 20)
+top_20_movies
+
+#Reordering the movies 
+top_20_movies$title <- reorder(top_20_movies$title, as.numeric(top_20_movies$popularity))
+
+#ggplot for the most popular 20 movies.
+ggplot(top_20_movies, aes(title, popularity)) +
+  geom_col(position = "dodge", aes(fill = popularity)) +
+  coord_flip() +
+  labs(x = "Movie Name", y = "popularity", title = "The most popular 20 movies")
+
+
+```
+2.checking the language that the highest amount of movies are produced. 
+```{r}
+#Showing a plot using ggplot to show in which language the highest amount of movies are produced.
+ggplot(movies,aes(x=original_language,fill=original_language))+
+         geom_histogram(stat="count",aes(y=..count../sum(..count..)),binwidth=1)+
+        theme(axis.text.x=element_text(angle=90,hjust=0.5,vjust=0),legend.position="none")+
+         labs(y="Percent",title="Languages")
+
+```
+
+3. Best movie according to the voting average
+```{r}
+#Best movie according to the voting average.
+Best_20_movies <- head(movies[order(movies$vote_average, decreasing = TRUE), c("title", "vote_average")], n = 20)
+Best_20_movies
+
+#Reordering the  best movies 
+Best_20_movies$title <- reorder(Best_20_movies$title, as.numeric(Best_20_movies$vote_average))
+
+#ggplot for showing best movie according to the voting average .
+ggplot(data = Best_20_movies, aes(title, vote_average)) +
+  geom_col(position = "dodge", aes(fill = vote_average)) +
+  coord_flip() +
+  labs(x = "Movie Name", y = "vote average", title = "The best 20 movies")
+```
+4. High budget movies
+```{r}
+#Movies with highest budget.
+First_20_high_budget_movies <- head(movies[order(movies$budget, decreasing = TRUE), c("title", "budget")], n = 20)
+First_20_high_budget_movies
+
+#Reordering the  high budget movies. 
+First_20_high_budget_movies$title <- reorder(First_20_high_budget_movies$title, as.numeric(First_20_high_budget_movies$budget))
+
+#ggplot for showing high budget movie .
+ggplot(data = First_20_high_budget_movies, aes(title, budget)) +
+  geom_col(position = "dodge", aes(fill = budget)) +
+  coord_flip() +
+  labs(x = "Movie Name", y = "budget", title = "High budget movies")
+```
+5. The movies with highest profit
+```{r}
+#Movies with highest profit.
+High_profit_movies <- head(movies[order(movies$revenue, decreasing = TRUE), c("title", "revenue")], n = 20)
+High_profit_movies
+
+#Reordering the  profitable movies 
+High_profit_movies$title <- reorder(High_profit_movies$title, as.numeric(High_profit_movies$revenue))
+
+#ggplot for showing high profit movies .
+ggplot(data = High_profit_movies, aes(title, revenue)) +
+  geom_col(position = "dodge", aes(fill ="revenue")) +
+  coord_flip() +
+  labs(x = "Movie Name", y = "revenue", title = "profitable movies")
+```
+6. Correlation analysis
+```{r}
+# Correlation analysis 
+numeric_columns <- sapply(movies, is.numeric)
+movies_numeric<- movies[,numeric_columns]
+
+#Corrplot 
+Correlation_of_movies<-cor(movies_numeric)
+corrplot(Correlation_of_movies, method = "color")
+Correlation_of_movies
+```
+7. Checking the relationship between voting average and budget.
+```{r} 
+ #Doing a scatter plot to show how the voting average change according to their budget.
+
+p<- ggplot(movies,aes(vote_average,budget))+geom_point()
+p
+# This shows an negative relationship.
+
+```
+8.  Checking the relationship between voting average and popularity.
+
+```{r}
+#Doing a scatter plot to show how the voting average change according to the popularity.
+
+p<- ggplot(movies,aes(vote_average,popularity))+geom_point()
+p
+#THis shows a positive relationship.
+
+```
+9. Checking the relationship between voting average and revenue
+```{r}
+#Doing a scatter plot to show how the voting average change according to the revenue.
+
+p<- ggplot(movies,aes(vote_average,revenue))+geom_point()
+p
+#THis shows a positive relationship.
+#More relationships can be checked from the correlation analysis done.
+
+```
+
+########## As this is a huge dataset, it takeslong time to run the model. More than a hour because of that filtered the dataset for the proposal. But in the main one full dataset will be used. Mentioned it in the proposal#########################################
+
+```{r}
+#Filtering the movies columns
+
+movies_new <- filter(movies,release_date<2019)
+
+```
+
+####################################################################
+# GENERALIZED LINEAR REGRESSION MODEL
+###################################################################
+
+```{r}
+
+set.seed(42)
+
+#Prepare the split for train and test dataset
+
+Split <- floor(0.80 * nrow(movies_new))
+
+#Getting indices of the dataset
+
+Trainset_indices <- sample(seq_len(nrow(movies_new)), size = Split)
+
+#Preparing train and testing dataset
+TrainingDataSet <- movies_new[Trainset_indices, ]
+TestDataSet <- movies_new[-Trainset_indices, ]
+
+# Check number of rows in every set
+nrow(movies_new)
+nrow(TrainingDataSet)
+nrow(TestDataSet)
+
+# Training the model on the movies dataset.(GENERALIZED LINEAR MODEL)
+Full_linear_model <-lm(vote_average~release_date+original_language+genre_ids+popularity+vote_count+runtime+budget+revenue, data = TrainingDataSet)
+# Check the summary of the model
+summary(Full_linear_model)
+
+#Model interpretation
+
+ggplot(data = Full_linear_model, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+#Showing the residuals
+ggplot(data = Full_linear_model, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+```
+
+ As I had no much time, I didn't do the other models. Please mention in the report that we will be doing logistic regression, pruned tree, unpruned tree and random forest.
+ 
+By selecting the best model will do the testing for the dataset. will select best model by the evaluation measures such as accuracy, precision, recall and F1.
+
+As to get an idea,
+This is the function that we are going to use,
+Evaluation_measures <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
+  
+  precision = tp/(tp+fp)
+  
+  recall = tp/(tp+fn)
+  
+  F1 = 2 * ((precision * recall)/(precision + recall))
+  
+  output = data.frame(name, accuracy, precision, recall, F1)
+  
+  return(output)
+}
