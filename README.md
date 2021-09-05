@@ -11,6 +11,13 @@ Group repository for Assignment 2: Data Analysis Project
 - Jean Koh
 - Rashmi Madduma Patabedige
 
+## Repository structure
+
+- R: R scripts, functions
+- Rmd: Rmarkdown, EDA, vignettes
+- data: Data sources, generated datasets
+- reports: Written documents, rendered visualisations/HTML/PDF
+
 ## Running instructions
 
 ### Setting up the project in RStudio
