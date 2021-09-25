@@ -61,7 +61,7 @@ summary(tmdb)
 
 # GLM Regression
 
-Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are of non normally distributted as the points deviate from the straight line.
+Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are normally distributed as some of the data points are fitted for the line, and some are exponentially distributed. Using a generalized linear model will allow for a more relaxed approach and be able to account for exponential distributions.
 
 ## Partitioning
 
@@ -78,8 +78,8 @@ training_size <- floor(0.75 * nrow(tmdb))
 trainingset_indices <- sample(seq_len(nrow(tmdb)), size = training_size)
 
 #Assign observations to training and testing sets
-trainingset <- OJ[trainingset_indices, ]
-testingset <- OJ[-trainingset_indices, ]
+trainingset <- tmdb[trainingset_indices, ]
+testingset <- tmdb[-trainingset_indices, ]
 
 #rowcounts to check
 nrow(trainingset)
