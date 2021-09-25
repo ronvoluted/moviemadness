@@ -1,0 +1,93 @@
+---
+title: "GLM Regression"
+author: "Maria Dhaliwal"
+date: "25/09/2021"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: false
+    final_ramen_print: kable
+    theme: spacelab
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Resources
+
+## Load Packages
+
+Load some libraries first for this regression.
+
+```{r libraries, warning=FALSE}
+suppressMessages(library(readr))
+suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(tidyverse))
+suppressMessages(library(stringr))
+suppressMessages(library(statsr))
+suppressMessages(library(gridExtra))
+suppressMessages(library(corrplot))
+
+```
+
+## Load Data
+
+Load the API-acquired datasets
+
+```{r tmdb, warning=FALSE}
+
+tmdb <- read_tsv("../data/all_top_rated_movies_2021-09-01.tsv")
+
+data(tmdb)
+str(tmdb)
+
+```
+
+## Explore dataset
+
+```{r explore, warning=FALSE}
+
+glimpse(tmdb)
+
+colSums(is.na(tmdb)) #check for missing values
+summary(tmdb)
+```
+
+
+
+# GLM Regression
+
+Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are of non normally distributted as the points deviate from the straight line.
+
+## Partitioning
+
+Partition data for training (75%) and testing (25%). Whilst doing so, set a random seed to ensure we get the same result each time.
+
+```{r partition, warning=FALSE}
+
+set.seed(285)
+
+#Create the sample size for regression
+training_size <- floor(0.75 * nrow(tmdb))
+
+#Set indices for the dataset
+trainingset_indices <- sample(seq_len(nrow(tmdb)), size = training_size)
+
+#Assign observations to training and testing sets
+trainingset <- OJ[trainingset_indices, ]
+testingset <- OJ[-trainingset_indices, ]
+
+#rowcounts to check
+nrow(trainingset)
+nrow(testingset)
+nrow(tmdb)
+
+```
+
+## Perform Generalized linear model (GLM) Regression
+
+
