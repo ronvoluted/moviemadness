@@ -151,7 +151,7 @@ varImp(tmdb_glm)
 ```
 
 Based on the summary, we can see that the following factors play a big importance:
-popularity, budget, vote_count, runtime, Action, Animation, Comedy, Daram, Horror, Science FIction, TV Movie, Thriller, and Western.
+popularity, budget, vote_count, runtime, Action, Animation, Comedy, Drama, Horror, Science Fiction, TV Movie, Thriller, and Western.
 
 ### Current Model Evaluation
 
@@ -199,6 +199,88 @@ lm_evaluation_measures <- get_evaluation_measurements("GLM",
                               lm_confusion_matrix_df$Freq[4])
 
 lm_evaluation_measures
+
+```
+
+
+## GLM less variables
+
+
+```{r glm2, warning=FALSE}
+
+tmdb_glm2 = glm(formula = vote_average ~ popularity + budget + vote_count + runtime + Action + Animation + Comedy + Drama + Horror + `Science Fiction` + `TV Movie` + Thriller + Western,
+               data = trainingset,
+               family = "gaussian"
+                 )
+
+```
+
+```{r plots-summary, warning=FALSE}
+
+summary(tmdb_glm2)
+
+plot(tmdb_glm2)
+
+ggplot(data = tmdb_glm2, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+
+#Showing the residuals
+ggplot(data = tmdb_glm2, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+varImp(tmdb_glm2)
+
+```
+
+### Model Evaluations 2
+
+```{r eval2, warning=FALSE}
+# Predict probabilities on the test set
+lm_prob2 <- predict.lm(tmdb_glm2, testingset[,-1], type = "response")
+
+# Create a vector to hold predictions
+lm_predict2 <- rep(0,nrow(testingset[,-1]))
+lm_predict2[lm_prob2>.5] <- 1
+
+# Create a confusion matrix
+lm_confusion_matrix2 <- table(pred = lm_predict2, 
+                             true = testingset$vote_average)
+
+lm_confusion_matrix2
+
+get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy2 = (tp+tn)/(tp+tn+fp+fn)
+  
+  precision2 = tp/(tp+fp)
+  
+  recall2 = tp/(tp+fn)
+  
+  F1_2 = 2 * ((precision2 * recall2)/(precision2 + recall2))
+  
+  output2 = data.frame(name, accuracy, precision, recall, F1)
+  
+  return(output2)
+  
+}
+
+
+# Data frame the confusion matrix result and output the evaluation measures
+
+lm_confusion_matrix_df2 <- as.data.frame(lm_confusion_matrix2)
+
+lm_evaluation_measures2 <- get_evaluation_measurements("GLM",
+                              lm_confusion_matrix_df2$Freq[1],
+                              lm_confusion_matrix_df2$Freq[2],
+                              lm_confusion_matrix_df2$Freq[3],
+                              lm_confusion_matrix_df2$Freq[4])
+
+lm_evaluation_measures2
 
 ```
 
