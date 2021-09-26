@@ -263,7 +263,7 @@ get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
   
   F1_2 = 2 * ((precision2 * recall2)/(precision2 + recall2))
   
-  output2 = data.frame(name, accuracy, precision, recall, F1)
+  output2 = data.frame(name, accuracy2, precision2, recall2, F1_2)
   
   return(output2)
   
@@ -284,3 +284,5 @@ lm_evaluation_measures2
 
 ```
 
+
+will need to further evaluate some parameters perhaps? accuracy, precision, recall, and F1 have not changed.
