@@ -32,6 +32,10 @@ suppressMessages(library(statsr))
 suppressMessages(library(gridExtra))
 suppressMessages(library(corrplot))
 suppressMessages(library(summarytools))
+suppressMessages(library(leaps))
+suppressMessages(library(tictoc))
+suppressMessages(library(bestglm))
+suppressMessages(library(caret))
 
 ```
 
@@ -59,37 +63,88 @@ dfSummary(tmdb, graph.magnif = 0.75, valid.col = FALSE, style = "grid")
 
 ```
 
+## Data Cleansing
+
+Removal of records containing NA as per EDA.
+
+```{r cleanse, message=FALSE, warning=FALSE}
+
+#Removal of the rows with the 16 missing values in the column overview, 2 missing values in genre ID, and .
+tmdb1 =  na.omit(tmdb)
+
+length(unique(tmdb1$title))
+
+# Returns the unique rows in movies dataset
+tmdb1 %>% distinct()
+
+# Remove duplicate rows based on multiple variables 
+tmdb1 %>% distinct(title, release_date, .keep_all = TRUE)
+
+```
 
 
-# GLM Regression
+# Regression
 
 Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are normally distributed as some of the data points are fitted for the line, and some are exponentially distributed. Using a generalized linear model will allow for a more relaxed approach and be able to account for exponential distributions.
 
-## Partitioning
+## Test/Train Split
 
-Partition data for training (75%) and testing (25%). Whilst doing so, set a random seed to ensure we get the same result each time.
+Partition data for training (70%) and testing (30%). Whilst doing so, set a random seed to ensure we get the same result each time.
 
 ```{r partition, warning=FALSE}
 
-set.seed(285)
+set.seed(42)
 
 #Create the sample size for regression
-training_size <- floor(0.75 * nrow(tmdb))
+training_size <- floor(0.70 * nrow(tmdb1))
 
 #Set indices for the dataset
-trainingset_indices <- sample(seq_len(nrow(tmdb)), size = training_size)
+trainingset_indices <- sample(seq_len(nrow(tmdb1)), size = training_size)
 
 #Assign observations to training and testing sets
-trainingset <- tmdb[trainingset_indices, ]
-testingset <- tmdb[-trainingset_indices, ]
+trainingset <- tmdb1[trainingset_indices, ]
+testingset <- tmdb1[-trainingset_indices, ]
 
 #rowcounts to check
 nrow(trainingset)
 nrow(testingset)
-nrow(tmdb)
+nrow(tmdb1)
 
 ```
 
 ## Perform Generalized linear model (GLM) Regression
 
+So back to our research question: "How can production studios and streaming platforms improve the performance and popularity of their movies?" 
+
+### Variable Selection
+
+For this model, based on the previous codes, we will utilise the same factors:
+revenue, popularity, budget, vote_count, runtime, and the genres
+
+```{r variable-selection, warning=FALSE}
+
+tmdb_glm = glm(formula = vote_average ~ revenue + popularity + budget + vote_count + runtime + Action + Adventure + Animation + Comedy + Crime + Documentary + Drama + Family + Fantasy + History + Horror + Music + Mystery + Romance + `Science Fiction` + `TV Movie` + Thriller + War + Western,
+               data = trainingset,
+               family = "gaussian"
+                 )
+```
+
+
+```{r plots-et-al, warning=FALSE}
+summary(tmdb_glm)
+
+ggplot(data = tmdb_glm, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+
+#Showing the residuals
+ggplot(data = tmdb_glm, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+varImp(tmdb_glm)
+```
 
