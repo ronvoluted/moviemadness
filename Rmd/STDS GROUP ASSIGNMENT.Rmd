@@ -60,12 +60,7 @@ create_report(movies)
 colSums(is.na(movies))
 # There are 15 missing values in the column overview and 2 missing values in genre ID. so I'm going to remove those columns.
 movies=  na.omit(movies)
-#checking the duplicate values.
-duplicated(movies)
-which(duplicated(movies))
-# The dataset have 15 duplicated values.
-#Removing the duplicate values.
- movies[!duplicated(movies), ]
+
 
 
 
