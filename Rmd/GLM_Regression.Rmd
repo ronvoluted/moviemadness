@@ -133,6 +133,8 @@ tmdb_glm = glm(formula = vote_average ~ revenue + popularity + budget + vote_cou
 ```{r plots-et-al, warning=FALSE}
 summary(tmdb_glm)
 
+plot(tmdb_glm)
+
 ggplot(data = tmdb_glm, aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -146,5 +148,57 @@ ggplot(data = tmdb_glm, aes(x = .resid)) +
   xlab("Residuals")
 
 varImp(tmdb_glm)
+```
+
+Based on the summary, we can see that the following factors play a big importance:
+popularity, budget, vote_count, runtime, Action, Animation, Comedy, Daram, Horror, Science FIction, TV Movie, Thriller, and Western.
+
+### Current Model Evaluation
+
+Let's have a look at this model's evaluation first:
+
+```{r eval, warning=FALSE}
+# Predict probabilities on the test set
+lm_prob <- predict.lm(tmdb_glm, testingset[,-1], type = "response")
+
+# Create a vector to hold predictions
+lm_predict <- rep(0,nrow(testingset[,-1]))
+lm_predict[lm_prob>.5] <- 1
+
+# Create a confusion matrix
+lm_confusion_matrix <- table(pred = lm_predict, 
+                             true = testingset$vote_average)
+
+lm_confusion_matrix
+
+get_evaluation_measurements <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
+  
+  precision = tp/(tp+fp)
+  
+  recall = tp/(tp+fn)
+  
+  F1 = 2 * ((precision * recall)/(precision + recall))
+  
+  output = data.frame(name, accuracy, precision, recall, F1)
+  
+  return(output)
+  
+}
+
+
+# Data frame the confusion matrix result and output the evaluation measures
+
+lm_confusion_matrix_df <- as.data.frame(lm_confusion_matrix)
+
+lm_evaluation_measures <- get_evaluation_measurements("GLM",
+                              lm_confusion_matrix_df$Freq[1],
+                              lm_confusion_matrix_df$Freq[2],
+                              lm_confusion_matrix_df$Freq[3],
+                              lm_confusion_matrix_df$Freq[4])
+
+lm_evaluation_measures
+
 ```
 
