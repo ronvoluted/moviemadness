@@ -31,6 +31,7 @@ suppressMessages(library(stringr))
 suppressMessages(library(statsr))
 suppressMessages(library(gridExtra))
 suppressMessages(library(corrplot))
+suppressMessages(library(summarytools))
 
 ```
 
@@ -51,10 +52,11 @@ str(tmdb)
 
 ```{r explore, warning=FALSE}
 
-glimpse(tmdb)
-
 colSums(is.na(tmdb)) #check for missing values
+glimpse(tmdb)
 summary(tmdb)
+dfSummary(tmdb, graph.magnif = 0.75, valid.col = FALSE, style = "grid")
+
 ```
 
 
