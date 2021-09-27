@@ -159,17 +159,17 @@ Let's have a look at this model's evaluation first:
 
 ```{r eval, warning=FALSE}
 # Predict probabilities on the test set
-lm_prob <- predict.lm(tmdb_glm, testingset[,-1], type = "response")
+glm_prob <- predict(tmdb_glm, testingset[,-1], type = "response")
 
 # Create a vector to hold predictions
-lm_predict <- rep(0,nrow(testingset[,-1]))
-lm_predict[lm_prob>.5] <- 1
+glm_predict <- rep(0,nrow(testingset[,-1]))
+glm_predict[glm_prob>=8] <- 1
 
 # Create a confusion matrix
-lm_confusion_matrix <- table(pred = lm_predict, 
+glm_confusion_matrix <- table(pred = glm_predict, 
                              true = testingset$vote_average)
 
-lm_confusion_matrix
+glm_confusion_matrix
 
 get_evaluation_measurements <- function(name = NA, tn, fp, fn, tp) {
   
@@ -190,15 +190,15 @@ get_evaluation_measurements <- function(name = NA, tn, fp, fn, tp) {
 
 # Data frame the confusion matrix result and output the evaluation measures
 
-lm_confusion_matrix_df <- as.data.frame(lm_confusion_matrix)
+glm_confusion_matrix_df <- as.data.frame(glm_confusion_matrix)
 
-lm_evaluation_measures <- get_evaluation_measurements("GLM",
-                              lm_confusion_matrix_df$Freq[1],
-                              lm_confusion_matrix_df$Freq[2],
-                              lm_confusion_matrix_df$Freq[3],
-                              lm_confusion_matrix_df$Freq[4])
+glm_evaluation_measures <- get_evaluation_measurements("GLM",
+                              glm_confusion_matrix_df$Freq[1],
+                              glm_confusion_matrix_df$Freq[2],
+                              glm_confusion_matrix_df$Freq[3],
+                              glm_confusion_matrix_df$Freq[4])
 
-lm_evaluation_measures
+glm_evaluation_measures
 
 ```
 
@@ -241,17 +241,17 @@ varImp(tmdb_glm2)
 
 ```{r eval2, warning=FALSE}
 # Predict probabilities on the test set
-lm_prob2 <- predict.lm(tmdb_glm2, testingset[,-1], type = "response")
+glm_prob2 <- predict(tmdb_glm2, testingset[,-1], type = "response")
 
 # Create a vector to hold predictions
-lm_predict2 <- rep(0,nrow(testingset[,-1]))
-lm_predict2[lm_prob2>.5] <- 1
+glm_predict2 <- rep(0,nrow(testingset[,-1]))
+glm_predict2[glm_prob2>=8] <- 1
 
 # Create a confusion matrix
-lm_confusion_matrix2 <- table(pred = lm_predict2, 
+glm_confusion_matrix2 <- table(pred = glm_predict2, 
                              true = testingset$vote_average)
 
-lm_confusion_matrix2
+glm_confusion_matrix2
 
 get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
   
@@ -272,15 +272,15 @@ get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
 
 # Data frame the confusion matrix result and output the evaluation measures
 
-lm_confusion_matrix_df2 <- as.data.frame(lm_confusion_matrix2)
+glm_confusion_matrix_df2 <- as.data.frame(glm_confusion_matrix2)
 
-lm_evaluation_measures2 <- get_evaluation_measurements("GLM",
-                              lm_confusion_matrix_df2$Freq[1],
-                              lm_confusion_matrix_df2$Freq[2],
-                              lm_confusion_matrix_df2$Freq[3],
-                              lm_confusion_matrix_df2$Freq[4])
+glm_evaluation_measures2 <- get_evaluation_measurements("GLM",
+                              glm_confusion_matrix_df2$Freq[1],
+                              glm_confusion_matrix_df2$Freq[2],
+                              glm_confusion_matrix_df2$Freq[3],
+                              glm_confusion_matrix_df2$Freq[4])
 
-lm_evaluation_measures2
+glm_evaluation_measures2
 
 ```
 
