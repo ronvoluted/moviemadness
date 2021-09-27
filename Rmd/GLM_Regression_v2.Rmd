@@ -161,11 +161,15 @@ ggplot(data = tmdb_glm, aes(x = .resid)) +
   geom_histogram(binwidth = 1, fill='white', color='black') +
   xlab("Residuals")
 
-varImp(tmdb_glm)
+imp <- as.data.frame(varImp(tmdb_glm))
+imp <- data.frame(overall = imp$Overall,
+           names   = rownames(imp))
+imp[order(imp$overall,decreasing = T),]
+
 ```
 
 Based on the summary, we can see that the following factors play a big importance:
-revenue, popularity, budget, vote_count, runtime, Animation, and Drama.
+revenue, popularity, budget, vote_count, runtime, Adventure, Animation, Drama, Horror, Music, Science Fiction, Thriller, War and Western.
 
 ### First Model Confusion Matrix
 
@@ -226,7 +230,7 @@ glm_evaluation_measures1
 
 ```{r glm2, warning=FALSE}
 
-tmdb_glm2 = glm(formula = vote_rate ~ revenue + popularity + budget + vote_count + runtime + Animation + Drama,
+tmdb_glm2 = glm(formula = vote_rate ~ revenue + popularity + budget + vote_count + runtime + Animation + Drama + Horror + Music + `Science Fiction` + Thriller + Western + War + Adventure,
                data = trainingset,
                family = "gaussian"
                  )
@@ -251,7 +255,11 @@ ggplot(data = tmdb_glm2, aes(x = .resid)) +
   geom_histogram(binwidth = 1, fill='white', color='black') +
   xlab("Residuals")
 
-varImp(tmdb_glm2)
+
+imp2 <- as.data.frame(varImp(tmdb_glm2))
+imp2 <- data.frame(overall = imp2$Overall,
+           names   = rownames(imp2))
+imp2[order(imp2$overall,decreasing = T),]
 
 ```
 
@@ -314,4 +322,4 @@ glm_evaluation_measures2
 
 # Findings
 
-
+By creating a new variable, the GLM model has provided a higher accuracy and higher precision. This shows that there is a high precision in predicting which movie is classified as a high performing and popular movie.
