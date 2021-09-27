@@ -1,0 +1,288 @@
+---
+title: "GLM Regression"
+author: "Maria Dhaliwal"
+date: "25/09/2021"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: false
+    final_ramen_print: kable
+    theme: spacelab
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Resources
+
+## Load Packages
+
+Load some libraries first for this regression.
+
+```{r libraries, warning=FALSE}
+suppressMessages(library(readr))
+suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(tidyverse))
+suppressMessages(library(stringr))
+suppressMessages(library(statsr))
+suppressMessages(library(gridExtra))
+suppressMessages(library(corrplot))
+suppressMessages(library(summarytools))
+suppressMessages(library(leaps))
+suppressMessages(library(tictoc))
+suppressMessages(library(bestglm))
+suppressMessages(library(caret))
+
+```
+
+## Load Data
+
+Load the API-acquired datasets
+
+```{r tmdb, warning=FALSE}
+
+tmdb <- read_tsv("../data/all_top_rated_movies_2021-09-01.tsv")
+
+data(tmdb)
+str(tmdb)
+
+```
+
+## Explore dataset
+
+```{r explore, warning=FALSE}
+
+colSums(is.na(tmdb)) #check for missing values
+glimpse(tmdb)
+summary(tmdb)
+dfSummary(tmdb, graph.magnif = 0.75, valid.col = FALSE, style = "grid")
+
+```
+
+## Data Cleansing
+
+Removal of records containing NA as per EDA.
+
+```{r cleanse, message=FALSE, warning=FALSE}
+
+#Removal of the rows with the 16 missing values in the column overview, 2 missing values in genre ID, and .
+tmdb1 =  na.omit(tmdb)
+
+length(unique(tmdb1$title))
+
+# Returns the unique rows in movies dataset
+tmdb1 %>% distinct()
+
+# Remove duplicate rows based on multiple variables 
+tmdb1 %>% distinct(title, release_date, .keep_all = TRUE)
+
+```
+
+
+# Regression
+
+Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are normally distributed as some of the data points are fitted for the line, and some are exponentially distributed. Using a generalized linear model will allow for a more relaxed approach and be able to account for exponential distributions.
+
+## Test/Train Split
+
+Partition data for training (70%) and testing (30%). Whilst doing so, set a random seed to ensure we get the same result each time.
+
+```{r partition, warning=FALSE}
+
+set.seed(42)
+
+#Create the sample size for regression
+training_size <- floor(0.70 * nrow(tmdb1))
+
+#Set indices for the dataset
+trainingset_indices <- sample(seq_len(nrow(tmdb1)), size = training_size)
+
+#Assign observations to training and testing sets
+trainingset <- tmdb1[trainingset_indices, ]
+testingset <- tmdb1[-trainingset_indices, ]
+
+#rowcounts to check
+nrow(trainingset)
+nrow(testingset)
+nrow(tmdb1)
+
+```
+
+## Perform Generalized linear model (GLM) Regression
+
+So back to our research question: "How can production studios and streaming platforms improve the performance and popularity of their movies?" 
+
+### Variable Selection
+
+For this model, based on the previous codes, we will utilise the same factors:
+revenue, popularity, budget, vote_count, runtime, and the genres
+
+```{r variable-selection, warning=FALSE}
+
+tmdb_glm = glm(formula = vote_average ~ revenue + popularity + budget + vote_count + runtime + Action + Adventure + Animation + Comedy + Crime + Documentary + Drama + Family + Fantasy + History + Horror + Music + Mystery + Romance + `Science Fiction` + `TV Movie` + Thriller + War + Western,
+               data = trainingset,
+               family = "gaussian"
+                 )
+```
+
+
+```{r plots-et-al, warning=FALSE}
+summary(tmdb_glm)
+
+plot(tmdb_glm)
+
+ggplot(data = tmdb_glm, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+
+#Showing the residuals
+ggplot(data = tmdb_glm, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+varImp(tmdb_glm)
+```
+
+Based on the summary, we can see that the following factors play a big importance:
+popularity, budget, vote_count, runtime, Action, Animation, Comedy, Drama, Horror, Science Fiction, TV Movie, Thriller, and Western.
+
+### Current Model Evaluation
+
+Let's have a look at this model's evaluation first:
+
+```{r eval, warning=FALSE}
+# Predict probabilities on the test set
+lm_prob <- predict.lm(tmdb_glm, testingset[,-1], type = "response")
+
+# Create a vector to hold predictions
+lm_predict <- rep(0,nrow(testingset[,-1]))
+lm_predict[lm_prob>.5] <- 1
+
+# Create a confusion matrix
+lm_confusion_matrix <- table(pred = lm_predict, 
+                             true = testingset$vote_average)
+
+lm_confusion_matrix
+
+get_evaluation_measurements <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
+  
+  precision = tp/(tp+fp)
+  
+  recall = tp/(tp+fn)
+  
+  F1 = 2 * ((precision * recall)/(precision + recall))
+  
+  output = data.frame(name, accuracy, precision, recall, F1)
+  
+  return(output)
+  
+}
+
+
+# Data frame the confusion matrix result and output the evaluation measures
+
+lm_confusion_matrix_df <- as.data.frame(lm_confusion_matrix)
+
+lm_evaluation_measures <- get_evaluation_measurements("GLM",
+                              lm_confusion_matrix_df$Freq[1],
+                              lm_confusion_matrix_df$Freq[2],
+                              lm_confusion_matrix_df$Freq[3],
+                              lm_confusion_matrix_df$Freq[4])
+
+lm_evaluation_measures
+
+```
+
+
+## GLM less variables
+
+
+```{r glm2, warning=FALSE}
+
+tmdb_glm2 = glm(formula = vote_average ~ popularity + budget + vote_count + runtime + Action + Animation + Comedy + Drama + Horror + `Science Fiction` + `TV Movie` + Thriller + Western,
+               data = trainingset,
+               family = "gaussian"
+                 )
+
+```
+
+```{r plots-summary, warning=FALSE}
+
+summary(tmdb_glm2)
+
+plot(tmdb_glm2)
+
+ggplot(data = tmdb_glm2, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+
+#Showing the residuals
+ggplot(data = tmdb_glm2, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+varImp(tmdb_glm2)
+
+```
+
+### Model Evaluations 2
+
+```{r eval2, warning=FALSE}
+# Predict probabilities on the test set
+lm_prob2 <- predict.lm(tmdb_glm2, testingset[,-1], type = "response")
+
+# Create a vector to hold predictions
+lm_predict2 <- rep(0,nrow(testingset[,-1]))
+lm_predict2[lm_prob2>.5] <- 1
+
+# Create a confusion matrix
+lm_confusion_matrix2 <- table(pred = lm_predict2, 
+                             true = testingset$vote_average)
+
+lm_confusion_matrix2
+
+get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy2 = (tp+tn)/(tp+tn+fp+fn)
+  
+  precision2 = tp/(tp+fp)
+  
+  recall2 = tp/(tp+fn)
+  
+  F1_2 = 2 * ((precision2 * recall2)/(precision2 + recall2))
+  
+  output2 = data.frame(name, accuracy2, precision2, recall2, F1_2)
+  
+  return(output2)
+  
+}
+
+
+# Data frame the confusion matrix result and output the evaluation measures
+
+lm_confusion_matrix_df2 <- as.data.frame(lm_confusion_matrix2)
+
+lm_evaluation_measures2 <- get_evaluation_measurements("GLM",
+                              lm_confusion_matrix_df2$Freq[1],
+                              lm_confusion_matrix_df2$Freq[2],
+                              lm_confusion_matrix_df2$Freq[3],
+                              lm_confusion_matrix_df2$Freq[4])
+
+lm_evaluation_measures2
+
+```
+
+
+will need to further evaluate some parameters perhaps? accuracy, precision, recall, and F1 have not changed.
