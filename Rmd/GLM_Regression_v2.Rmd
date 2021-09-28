@@ -1,7 +1,7 @@
 ---
 title: "GLM Regression"
 author: "Maria Dhaliwal"
-date: "25/09/2021"
+date: "28/09/2021"
 output: 
   html_document:
     toc: true
@@ -86,7 +86,7 @@ tmdb1 %>% distinct(title, release_date, .keep_all = TRUE)
 
 ## Add new variable
 
-Adding a new variable in for the GLM regression. Assuming that a high vote_average is what classifies as popular and high performing movie, then we will separate out any vote_average that is greater than or equal to 8. 
+Adding a new variable in for the GLM regression. Assuming that a high vote_average is what classifies as popular and high performing movie, then we will separate out any vote_average that is greater than or equal to 7. 
 
 ```{r new-factor, warning=FALSE}
 
@@ -99,7 +99,7 @@ tmdb1$vote_rate = ifelse(tmdb1$vote_average >= 8, 1, 0)
 
 # Regression
 
-Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are normally distributed as some of the data points are fitted for the line, and some are exponentially distributed. Using a generalized linear model will allow for a more relaxed approach and be able to account for exponential distributions.
+Based on the QQ plots that resulted from our exploratory data analysis, we can see that some factors are normally distributed as some of the data points are fitted for the line, and most are right skewed. Using a generalized linear model will allow for a more relaxed approach and be able to account for a variety of distributions.
 
 ## Test/Train Split
 
@@ -139,7 +139,7 @@ revenue, popularity, budget, vote_count, runtime, and the genres
 
 tmdb_glm = glm(formula = vote_rate ~ revenue + popularity + budget + vote_count + runtime + Action + Adventure + Animation + Comedy + Crime + Documentary + Drama + Family + Fantasy + History + Horror + Music + Mystery + Romance + `Science Fiction` + `TV Movie` + Thriller + War + Western,
                data = trainingset,
-               family = "gaussian"
+               family = binomial(logit)
                  )
 ```
 
@@ -169,7 +169,7 @@ imp[order(imp$overall,decreasing = T),]
 ```
 
 Based on the summary, we can see that the following factors play a big importance:
-revenue, popularity, budget, vote_count, runtime, Adventure, Animation, Drama, Horror, Music, Science Fiction, Thriller, War and Western.
+popularity, budget, vote_count, runtime, Animation, Drama, Horror, Science Fiction, Thriller, and Western.
 
 ### First Model Confusion Matrix
 
@@ -230,9 +230,9 @@ glm_evaluation_measures1
 
 ```{r glm2, warning=FALSE}
 
-tmdb_glm2 = glm(formula = vote_rate ~ revenue + popularity + budget + vote_count + runtime + Animation + Drama + Horror + Music + `Science Fiction` + Thriller + Western + War + Adventure,
+tmdb_glm2 = glm(formula = vote_rate ~ popularity + budget + vote_count + runtime + Animation + Drama + Horror + `Science Fiction` + Thriller + Western,
                data = trainingset,
-               family = "gaussian"
+               family = binomial(logit)
                  )
 
 ```
@@ -266,7 +266,7 @@ imp2[order(imp2$overall,decreasing = T),]
 
 ### Second Model Confusion Matrix
 
-Let's have a look at the second model's evaluation first:
+Let's have a look at the second model's evaluation:
 
 ```{r cfm2, warning=FALSE}
 # Predict probabilities on the test set
@@ -291,15 +291,15 @@ glm_confusion_matrix2
 
 get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
   
-  accuracy2 = (tp+tn)/(tp+tn+fp+fn)
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
   
-  precision2 = tp/(tp+fp)
+  precision = tp/(tp+fp)
   
-  recall2 = tp/(tp+fn)
+  recall = tp/(tp+fn)
   
-  F1_2 = 2 * ((precision2 * recall2)/(precision2 + recall2))
+  F1 = 2 * ((precision * recall)/(precision + recall))
   
-  output2 = data.frame(name, accuracy2, precision2, recall2, F1_2)
+  output2 = data.frame(name, accuracy, precision, recall, F1)
   
   return(output2)
   
@@ -310,7 +310,7 @@ get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
 
 glm_confusion_matrix_df2 <- as.data.frame(glm_confusion_matrix2)
 
-glm_evaluation_measures2 <- get_evaluation_measurements2("GLM",
+glm_evaluation_measures2 <- get_evaluation_measurements2("GLM2",
                               glm_confusion_matrix_df2$Freq[1],
                               glm_confusion_matrix_df2$Freq[2],
                               glm_confusion_matrix_df2$Freq[3],
@@ -322,4 +322,8 @@ glm_evaluation_measures2
 
 # Findings
 
-By creating a new variable, the GLM model has provided a higher accuracy and higher precision. This shows that there is a high precision in predicting which movie is classified as a high performing and popular movie.
+By creating a new variable, the GLM model has provided a higher accuracy and higher precision. This shows that there is a high precision in predicting which movie is classified as a high performing and popular movie. It should also be noted that the following coefficients were of high significance to the vote_rate:
+ 
+ - popularity, vote_count, runtime, Animation, and Drama, all of which has a positive influence on vote_rate
+ - budget, which has a negative influence on vote_rate
+
