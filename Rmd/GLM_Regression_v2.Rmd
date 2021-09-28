@@ -60,7 +60,7 @@ str(tmdb)
 
 colSums(is.na(tmdb)) #check for missing values
 glimpse(tmdb)
-summary(tmdb)
+summary(tmdb) 
 dfSummary(tmdb, graph.magnif = 0.75, valid.col = FALSE, style = "grid")
 
 ```
