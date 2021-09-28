@@ -65,19 +65,6 @@ ggplot(top_20_movies, aes(title, popularity)) +
   scale_fill_gradient(low = "gold", high = "purple")
 ```
 
-# 20 Highest Budget Movies 
-```{r budget}
-highest_budget_movies <- head(movies[order(movies$budget, decreasing = TRUE), c("title", "budget")], n = 20)
-highest_budget_movies$title <- reorder(highest_budget_movies$title, as.numeric(highest_budget_movies$budget))
-ggplot(highest_budget_movies, aes(title, budget)) +
-  geom_col(position = "dodge", aes(fill = budget)) +
-  coord_flip() +
-  labs(x = "Movie Name",
-       y = "Budget",
-       title = "20 Highest Budget Movies") +
-  scale_fill_gradient(low = "gold", high = "purple")
-```
-
 # Highest Protfitable Movies
 ```{r revenue}
 highest_profit_movies <- head(movies[order(movies$revenue, decreasing = TRUE), c("title", "revenue")], n = 20)
@@ -91,7 +78,20 @@ ggplot(highest_profit_movies, aes(title, revenue)) +
   scale_fill_gradient(low = "gold", high = "purple")
 ```
 
-# Genres
+# 20 Highest Budget Movies 
+```{r budget}
+highest_budget_movies <- head(movies[order(movies$budget, decreasing = TRUE), c("title", "budget")], n = 20)
+highest_budget_movies$title <- reorder(highest_budget_movies$title, as.numeric(highest_budget_movies$budget))
+ggplot(highest_budget_movies, aes(title, budget)) +
+  geom_col(position = "dodge", aes(fill = budget)) +
+  coord_flip() +
+  labs(x = "Movie Name",
+       y = "Budget",
+       title = "20 Highest Budget Movies") +
+  scale_fill_gradient(low = "gold", high = "purple")
+```
+
+# The Relative Frequencies of Genres
 ```{r genres}
 action <- ggplot(movies, aes(x = Action)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
@@ -124,7 +124,6 @@ comedy <- ggplot(movies, aes(x = Comedy)) +
 #Plot 1 
 ggarrange(action, adventure, animation, comedy + rremove("x.text"),
           ncol = 2, nrow = 2)
-
 
 crime <- ggplot(movies, aes(x = Crime)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
@@ -261,6 +260,108 @@ ggplot(longest_runtime_movies, aes(title, runtime)) +
   scale_fill_gradient(low = "gold", high = "purple")
 ```
 
+# Vote Averages against Genres
+```{r vote genres}
+action_vote_average <- movies %>%
+  select(c('Action', 'vote_average')) %>%
+  filter(Action == "TRUE")
+action_vote_average$Action <- str_replace(action_vote_average$Action, "TRUE", "Action")
+
+adventure_vote_average <- movies %>%
+  select(c('Adventure', 'vote_average')) %>%
+  filter(Adventure == "TRUE")
+adventure_vote_average$Adventure <- str_replace(adventure_vote_average$Adventure, "TRUE", "Adventure")
+
+animation_vote_average <- movies %>%
+  select(c('Animation', 'vote_average')) %>%
+  filter(Animation == "TRUE")
+animation_vote_average$Animation <- str_replace(animation_vote_average$Animation, "TRUE", "Animation")
+
+comedy_vote_average <- movies %>%
+  select(c('Comedy', 'vote_average')) %>%
+  filter(Comedy == "TRUE")
+comedy_vote_average$Comedy <- str_replace(comedy_vote_average$Comedy, "TRUE", "Comedy")
+
+crime_vote_average <- movies %>%
+  select(c('Crime', 'vote_average')) %>%
+  filter(Crime == "TRUE")
+crime_vote_average$Crime <- str_replace(crime_vote_average$Crime, "TRUE", "Crime")
+
+drama_vote_average <- movies %>%
+  select(c('Drama', 'vote_average')) %>%
+  filter(Drama == "TRUE")
+drama_vote_average$Drama <- str_replace(drama_vote_average$Drama, "TRUE", "Drama")
+
+family_vote_average <- movies %>%
+  select(c('Family', 'vote_average')) %>%
+  filter(Family == "TRUE")
+family_vote_average$Family <- str_replace(family_vote_average$Family, "TRUE", "Family")
+
+fantasy_vote_average <- movies %>%
+  select(c('Fantasy', 'vote_average')) %>%
+  filter(Fantasy == "TRUE")
+fantasy_vote_average$Fantasy <- str_replace(fantasy_vote_average$Fantasy, "TRUE", "Fantasy")
+
+mystery_vote_average <- movies %>%
+  select(c('Mystery', 'vote_average')) %>%
+  filter(Mystery == "TRUE")
+mystery_vote_average$Mystery <- str_replace(mystery_vote_average$Mystery, "TRUE", "Mystery")
+
+sciencefiction_vote_average <- movies %>%
+  select(c('Science Fiction', 'vote_average')) %>%
+  filter(`Science Fiction` == "TRUE")
+sciencefiction_vote_average$`Science Fiction` <- str_replace(sciencefiction_vote_average$`Science Fiction`, "TRUE", "Science Fiction")
+
+romance_vote_average <- movies %>%
+  select(c('Romance', 'vote_average')) %>%
+  filter(Romance == "TRUE") 
+romance_vote_average$Romance <- str_replace(romance_vote_average$Romance, "TRUE", "Romance")
+
+tvmovie_vote_average <- movies %>%
+  select(c('TV Movie', 'vote_average')) %>%
+  filter(`TV Movie` == "TRUE") 
+tvmovie_vote_average$`TV Movie` <- str_replace(tvmovie_vote_average$`TV Movie`, "TRUE", "TV Movie")
+
+thriller_vote_average <- movies %>%
+  select(c('Thriller', 'vote_average')) %>%
+  filter(Thriller == "TRUE") 
+thriller_vote_average$Thriller <- str_replace(thriller_vote_average$Thriller, "TRUE", "Thriller")
+
+war_vote_average <- movies %>%
+  select(c('War', 'vote_average')) %>%
+  filter(War == "TRUE") 
+war_vote_average$War <- str_replace(war_vote_average$War, "TRUE", "War")
+
+western_vote_average <- movies %>%
+  select(c('Western', 'vote_average')) %>%
+  filter(Western == "TRUE") 
+western_vote_average$Western <- str_replace(western_vote_average$Western, "TRUE", "Western")
+
+# Genre and Vote Average relationship
+mycolors <- colorRampPalette(brewer.pal(9, "RdPu"))
+ggplot() +
+  geom_boxplot(data = action_vote_average, aes(x = Action, y = vote_average, color = Action)) +
+  geom_boxplot(data = adventure_vote_average, aes(x = Adventure, y = vote_average, color = Adventure)) +
+  geom_boxplot(data = animation_vote_average, aes(x = Animation, y = vote_average, color = Animation)) +
+  geom_boxplot(data = comedy_vote_average, aes(x = Comedy, y = vote_average, color = Comedy)) +
+  geom_boxplot(data = crime_vote_average, aes(x = Crime, y = vote_average, color = Crime)) +
+  geom_boxplot(data = drama_vote_average, aes(x = Drama, y = vote_average, color = Drama)) +
+  geom_boxplot(data = family_vote_average, aes(x = Family, y = vote_average, color = Family)) +
+  geom_boxplot(data = fantasy_vote_average, aes(x = Fantasy, y = vote_average, color = Fantasy)) +
+  geom_boxplot(data = mystery_vote_average, aes(x = Mystery, y = vote_average, color = Mystery)) +
+  geom_boxplot(data = sciencefiction_vote_average, aes(x = `Science Fiction`, y = vote_average, color = `Science Fiction`)) +
+  geom_boxplot(data = romance_vote_average, aes(x = Romance, y = vote_average, color = Romance)) +
+  geom_boxplot(data = tvmovie_vote_average, aes(x = `TV Movie`, y = vote_average, color = `TV Movie`)) +
+  geom_boxplot(data = thriller_vote_average, aes(x = Thriller, y = vote_average, color = Thriller)) +
+  geom_boxplot(data = war_vote_average, aes(x = War, y = vote_average, color = War)) +
+  geom_boxplot(data = western_vote_average, aes(x = Western, y = vote_average, color = Western)) +
+  scale_fill_manual(values = mycolors) +
+  labs(x = "Genres",
+       y = "Vote_Average",
+       title = "Vote Average Against Genres") +
+  scale_colour_discrete("Genres")
+```
+
 # Movies' Original Languages
 ```{r languages}
 ggplot(movies,aes(x=original_language,fill=original_language))+
@@ -269,15 +370,37 @@ ggplot(movies,aes(x=original_language,fill=original_language))+
          labs(y="Percent",title="Languages")
 ```
 
-# Correlation Analysis 
-```{r correlation}
-# Correlation analysis 
+# Correlation Plot 
+```{r correlation plot}
 numeric_columns <- sapply(movies, is.numeric)
 movies_numeric<- movies[,numeric_columns]
-
-#Corrplot 
-Correlation_of_movies<-cor(movies_numeric)
-corrplot(Correlation_of_movies, method = "color")
+Correlation_of_movies <-cor(movies_numeric)
+corrplot(correlation_of_movies, method = "color",col = brewer.pal(n = 10, name = 'BuPu'))
 Correlation_of_movies
+```
+
+# Correlation Analysis 
+```{r correlation analysis}
+Correlation_of_movies
+```
+
+# Voting average and popularity 
+```{r vote popularity}
+vote_popularity <- ggplot(movies, aes(vote_average, popularity)) + 
+  geom_point(color = "orange") + 
+  labs(x = "Vote Average",
+       y = "Popularity",
+       title = "Vote Average against Popularity")
+vote_popularity
+```
+
+# Voting average and budget 
+```{r vote budget}
+vote_budget <- ggplot(movies, aes(vote_average, budget)) +
+  geom_point(colour = "purple") +
+  labs(x = "Vote Average",
+       y = "Budget",
+       title = "Vote Average against Budget")
+vote_budget
 ```
 
