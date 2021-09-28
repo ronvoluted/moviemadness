@@ -60,7 +60,7 @@ str(tmdb)
 
 colSums(is.na(tmdb)) #check for missing values
 glimpse(tmdb)
-summary(tmdb)
+summary(tmdb) 
 dfSummary(tmdb, graph.magnif = 0.75, valid.col = FALSE, style = "grid")
 
 ```
@@ -144,7 +144,7 @@ tmdb_glm = glm(formula = vote_rate ~ revenue + popularity + budget + vote_count 
 ```
 
 
-```{r plots-et-al, warning=FALSE}
+```{r plots-summary, warning=FALSE}
 summary(tmdb_glm)
 
 plot(tmdb_glm)
@@ -155,12 +155,12 @@ ggplot(data = tmdb_glm, aes(x = .fitted, y = .resid)) +
   xlab("Fitted values") +
   ylab("Residuals")
 
-
 #Showing the residuals
 ggplot(data = tmdb_glm, aes(x = .resid)) +
   geom_histogram(binwidth = 1, fill='white', color='black') +
   xlab("Residuals")
 
+#Variance Importance
 imp <- as.data.frame(varImp(tmdb_glm))
 imp <- data.frame(overall = imp$Overall,
            names   = rownames(imp))
@@ -197,19 +197,12 @@ glm_confusion_matrix
 get_evaluation_measurements1 <- function(name = NA, tn, fp, fn, tp) {
   
   accuracy = (tp+tn)/(tp+tn+fp+fn)
-  
   precision = tp/(tp+fp)
-  
   recall = tp/(tp+fn)
-  
   F1 = 2 * ((precision * recall)/(precision + recall))
-  
   output = data.frame(name, accuracy, precision, recall, F1)
-  
   return(output)
-  
 }
-
 
 # Data frame the confusion matrix result and output the evaluation measures
 
@@ -237,7 +230,7 @@ tmdb_glm2 = glm(formula = vote_rate ~ popularity + budget + vote_count + runtime
 
 ```
 
-```{r plots-summary, warning=FALSE}
+```{r plots-summary2, warning=FALSE}
 
 summary(tmdb_glm2)
 
@@ -249,13 +242,12 @@ ggplot(data = tmdb_glm2, aes(x = .fitted, y = .resid)) +
   xlab("Fitted values") +
   ylab("Residuals")
 
-
 #Showing the residuals
 ggplot(data = tmdb_glm2, aes(x = .resid)) +
   geom_histogram(binwidth = 1, fill='white', color='black') +
   xlab("Residuals")
 
-
+#Variance Importance
 imp2 <- as.data.frame(varImp(tmdb_glm2))
 imp2 <- data.frame(overall = imp2$Overall,
            names   = rownames(imp2))
@@ -292,19 +284,12 @@ glm_confusion_matrix2
 get_evaluation_measurements2 <- function(name = NA, tn, fp, fn, tp) {
   
   accuracy = (tp+tn)/(tp+tn+fp+fn)
-  
   precision = tp/(tp+fp)
-  
   recall = tp/(tp+fn)
-  
   F1 = 2 * ((precision * recall)/(precision + recall))
-  
   output2 = data.frame(name, accuracy, precision, recall, F1)
-  
   return(output2)
-  
 }
-
 
 # Data frame the confusion matrix result and output the evaluation measures
 
@@ -320,10 +305,99 @@ glm_evaluation_measures2
 
 ```
 
+## Third GLM - even less variables
+
+
+```{r glm3, warning=FALSE}
+
+tmdb_glm3 = glm(formula = vote_rate ~ popularity + budget + vote_count + runtime + Animation + Drama,
+               data = trainingset,
+               family = binomial(logit)
+                 )
+
+```
+
+```{r plots-summary3, warning=FALSE}
+
+summary(tmdb_glm3)
+
+plot(tmdb_glm3)
+
+ggplot(data = tmdb_glm3, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+#Showing the residuals
+ggplot(data = tmdb_glm3, aes(x = .resid)) +
+  geom_histogram(binwidth = 1, fill='white', color='black') +
+  xlab("Residuals")
+
+#Variance Importance
+imp3 <- as.data.frame(varImp(tmdb_glm3))
+imp3 <- data.frame(overall = imp3$Overall,
+           names   = rownames(imp3))
+imp3[order(imp3$overall,decreasing = T),]
+
+```
+
+
+### Third Model Confusion Matrix
+
+Let's have a look at the third model's evaluation:
+
+```{r cfm3, warning=FALSE}
+# Predict probabilities on the test set
+glm_prob3 <- predict(tmdb_glm3, testingset[,-1], type = "response")
+
+# Create a vector to hold predictions
+glm_predict3 <- rep(0,nrow(testingset[,-1]))
+glm_predict3[glm_prob3 >= 0.5] <- 1
+
+# Create a confusion matrix
+glm_confusion_matrix3 <- table(pred = glm_predict3, 
+                             true = testingset$vote_rate)
+
+glm_confusion_matrix3
+
+```
+
+
+### Third Model Evaluations
+
+```{r eval3, warning=FALSE}
+
+get_evaluation_measurements3 <- function(name = NA, tn, fp, fn, tp) {
+  
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
+  precision = tp/(tp+fp)
+  recall = tp/(tp+fn)
+  F1 = 2 * ((precision * recall)/(precision + recall))
+  output3 = data.frame(name, accuracy, precision, recall, F1)
+  return(output3)
+}
+
+# Data frame the confusion matrix result and output the evaluation measures
+
+glm_confusion_matrix_df3 <- as.data.frame(glm_confusion_matrix3)
+
+glm_evaluation_measures3 <- get_evaluation_measurements3("GLM3",
+                              glm_confusion_matrix_df3$Freq[1],
+                              glm_confusion_matrix_df3$Freq[2],
+                              glm_confusion_matrix_df3$Freq[3],
+                              glm_confusion_matrix_df3$Freq[4])
+
+glm_evaluation_measures3
+
+```
+
+
 # Findings
 
 By creating a new variable, the GLM model has provided a higher accuracy and higher precision. This shows that there is a high precision in predicting which movie is classified as a high performing and popular movie. It should also be noted that the following coefficients were of high significance to the vote_rate:
  
  - popularity, vote_count, runtime, Animation, and Drama, all of which has a positive influence on vote_rate
- - budget, which has a negative influence on vote_rate
+ - budget, which has a negative influence on vote_rate, depicts that a larger budget does not automatically mean a movie will be of a highly rated.
+
 
