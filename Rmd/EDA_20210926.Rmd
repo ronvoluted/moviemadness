@@ -16,6 +16,8 @@ library(ggplot2)
 library(ggpubr)
 library(scales)
 library(corrplot)
+library(RColorBrewer)
+library(stringr)
 ```
 
 ## Loading Dataset
@@ -51,10 +53,32 @@ movies %>% distinct(title, release_date, .keep_all = TRUE)
 length(unique(movies$title))
 ```
 
+## Setting the criteria that if budget, revenue and runtime equals to 0, omit the row of dataset 
+```{r removing zero values}
+summary(movies$runtime)
+summary(movies$budget)
+summary(movies$revenue)
+# Filtering data that equals to 0 
+movies_new <- movies
+movies_new <- filter(movies, budget > 0, revenue > 0, runtime > 0)
+movies_new
+# Number of rows - reduced to 4768
+nrow(movies_new)
+```
+
 ## Explanatory Data Analysis EDA 
+```{r intro}
+# First few rows of movies dataset 
+head(movies_new)
+# Last few rows of movies dataset 
+tail(movies_new)
+# Summary Statistics 
+summary(movies_new)
+```
+
 # Top 20 popular movies 
 ```{r popularity}
-top_20_movies <- head(movies[order(movies$popularity, decreasing = TRUE), c("title", "popularity")], n = 20)
+top_20_movies <- head(movies_new[order(movies_new$popularity, decreasing = TRUE), c("title", "popularity")], n = 20)
 top_20_movies$title <- reorder(top_20_movies$title, as.numeric(top_20_movies$popularity))
 ggplot(top_20_movies, aes(title, popularity)) +
   geom_col(position = "dodge", aes(fill = popularity)) +
@@ -67,8 +91,8 @@ ggplot(top_20_movies, aes(title, popularity)) +
 
 # Highest Protfitable Movies
 ```{r revenue}
-highest_profit_movies <- head(movies[order(movies$revenue, decreasing = TRUE), c("title", "revenue")], n = 20)
-highest_profit_movies$title <- reorder(highest_profit_movies$title, as.numeric(highest_budget_movies$budget))
+highest_profit_movies <- head(movies_new[order(movies_new$revenue, decreasing = TRUE), c("title", "revenue")], n = 20)
+highest_profit_movies$title <- reorder(highest_profit_movies$title, as.numeric(highest_profit_movies$revenue))
 ggplot(highest_profit_movies, aes(title, revenue)) +
   geom_col(position = "dodge", aes(fill = revenue)) +
   coord_flip() +
@@ -80,7 +104,7 @@ ggplot(highest_profit_movies, aes(title, revenue)) +
 
 # 20 Highest Budget Movies 
 ```{r budget}
-highest_budget_movies <- head(movies[order(movies$budget, decreasing = TRUE), c("title", "budget")], n = 20)
+highest_budget_movies <- head(movies_new[order(movies_new$budget, decreasing = TRUE), c("title", "budget")], n = 20)
 highest_budget_movies$title <- reorder(highest_budget_movies$title, as.numeric(highest_budget_movies$budget))
 ggplot(highest_budget_movies, aes(title, budget)) +
   geom_col(position = "dodge", aes(fill = budget)) +
@@ -93,28 +117,28 @@ ggplot(highest_budget_movies, aes(title, budget)) +
 
 # The Relative Frequencies of Genres
 ```{r genres}
-action <- ggplot(movies, aes(x = Action)) +
+action <- ggplot(movies_new, aes(x = Action)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-adventure <- ggplot(movies, aes(x = Adventure)) +
+adventure <- ggplot(movies_new, aes(x = Adventure)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-animation <- ggplot(movies, aes(x = Animation)) +
+animation <- ggplot(movies_new, aes(x = Animation)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-comedy <- ggplot(movies, aes(x = Comedy)) +
+comedy <- ggplot(movies_new, aes(x = Comedy)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
@@ -125,28 +149,29 @@ comedy <- ggplot(movies, aes(x = Comedy)) +
 ggarrange(action, adventure, animation, comedy + rremove("x.text"),
           ncol = 2, nrow = 2)
 
-crime <- ggplot(movies, aes(x = Crime)) +
+
+crime <- ggplot(movies_new, aes(x = Crime)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-documentary <- ggplot(movies, aes(x = Documentary)) +
+documentary <- ggplot(movies_new, aes(x = Documentary)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-drama <- ggplot(movies, aes(x = Drama)) +
+drama <- ggplot(movies_new, aes(x = Drama)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-family <- ggplot(movies, aes(x = Family)) +
+family <- ggplot(movies_new, aes(x = Family)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
@@ -157,28 +182,28 @@ family <- ggplot(movies, aes(x = Family)) +
 ggarrange(crime, documentary, drama, family + rremove("x.text"),
           ncol = 2, nrow = 2)
 
-fantasy <- ggplot(movies, aes(x = Fantasy)) +
+fantasy <- ggplot(movies_new, aes(x = Fantasy)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-history <- ggplot(movies, aes(x = History)) +
+history <- ggplot(movies_new, aes(x = History)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-horror <- ggplot(movies, aes(x = Horror)) +
+horror <- ggplot(movies_new, aes(x = Horror)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-music <- ggplot(movies, aes(x = Music)) +
+music <- ggplot(movies_new, aes(x = Music)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
@@ -189,28 +214,28 @@ music <- ggplot(movies, aes(x = Music)) +
 ggarrange(fantasy, history, horror, music + rremove("x.text"),
           ncol = 2, nrow = 2)
 
-mystery <- ggplot(movies, aes(x = Mystery)) +
+mystery <- ggplot(movies_new, aes(x = Mystery)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-romance <- ggplot(movies, aes(x = Romance)) +
+romance <- ggplot(movies_new, aes(x = Romance)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-sciencefiction <- ggplot(movies, aes(x = `Science Fiction`)) +
+sciencefiction <- ggplot(movies_new, aes(x = `Science Fiction`)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-tvmovie <- ggplot(movies, aes(x = `TV Movie`)) +
+tvmovie <- ggplot(movies_new, aes(x = `TV Movie`)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
@@ -221,21 +246,21 @@ tvmovie <- ggplot(movies, aes(x = `TV Movie`)) +
 ggarrange(mystery, romance, sciencefiction, tvmovie + rremove("x.text"),
           ncol = 2, nrow = 2)
 
-thriller <- ggplot(movies, aes(x = Thriller)) +
+thriller <- ggplot(movies_new, aes(x = Thriller)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-war <- ggplot(movies, aes(x = War)) +
+war <- ggplot(movies_new, aes(x = War)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "gold") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
   scale_y_continuous(labels = scales::percent) +
   labs(y = "Relative Frequencies")
 
-western <- ggplot(movies, aes(x = Western)) +
+western <- ggplot(movies_new, aes(x = Western)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), fill = "purple") +
   geom_text(aes(label = scales::percent((..count..)/sum(..count..)),
                 y = (..count..)/sum(..count..)), stat = "count", vjust = -.5) +
@@ -249,7 +274,7 @@ ggarrange(thriller, war, western + rremove("x.text"),
 
 # Top 20 movies with the longest runtime 
 ```{r runtime}
-longest_runtime_movies <- head(movies[order(movies$runtime, decreasing = TRUE), c("title", "runtime")], n = 20)
+longest_runtime_movies <- head(movies_new[order(movies_new$runtime, decreasing = TRUE), c("title", "runtime")], n = 20)
 longest_runtime_movies$title <- reorder(longest_runtime_movies$title, as.numeric(longest_runtime_movies$runtime))
 ggplot(longest_runtime_movies, aes(title, runtime)) +
   geom_col(position = "dodge", aes(fill = runtime)) +
@@ -262,77 +287,77 @@ ggplot(longest_runtime_movies, aes(title, runtime)) +
 
 # Vote Averages against Genres
 ```{r vote genres}
-action_vote_average <- movies %>%
+action_vote_average <- movies_new %>%
   select(c('Action', 'vote_average')) %>%
   filter(Action == "TRUE")
 action_vote_average$Action <- str_replace(action_vote_average$Action, "TRUE", "Action")
 
-adventure_vote_average <- movies %>%
+adventure_vote_average <- movies_new %>%
   select(c('Adventure', 'vote_average')) %>%
   filter(Adventure == "TRUE")
 adventure_vote_average$Adventure <- str_replace(adventure_vote_average$Adventure, "TRUE", "Adventure")
 
-animation_vote_average <- movies %>%
+animation_vote_average <- movies_new %>%
   select(c('Animation', 'vote_average')) %>%
   filter(Animation == "TRUE")
 animation_vote_average$Animation <- str_replace(animation_vote_average$Animation, "TRUE", "Animation")
 
-comedy_vote_average <- movies %>%
+comedy_vote_average <- movies_new %>%
   select(c('Comedy', 'vote_average')) %>%
   filter(Comedy == "TRUE")
 comedy_vote_average$Comedy <- str_replace(comedy_vote_average$Comedy, "TRUE", "Comedy")
 
-crime_vote_average <- movies %>%
+crime_vote_average <- movies_new %>%
   select(c('Crime', 'vote_average')) %>%
   filter(Crime == "TRUE")
 crime_vote_average$Crime <- str_replace(crime_vote_average$Crime, "TRUE", "Crime")
 
-drama_vote_average <- movies %>%
+drama_vote_average <- movies_new %>%
   select(c('Drama', 'vote_average')) %>%
   filter(Drama == "TRUE")
 drama_vote_average$Drama <- str_replace(drama_vote_average$Drama, "TRUE", "Drama")
 
-family_vote_average <- movies %>%
+family_vote_average <- movies_new %>%
   select(c('Family', 'vote_average')) %>%
   filter(Family == "TRUE")
 family_vote_average$Family <- str_replace(family_vote_average$Family, "TRUE", "Family")
 
-fantasy_vote_average <- movies %>%
+fantasy_vote_average <- movies_new %>%
   select(c('Fantasy', 'vote_average')) %>%
   filter(Fantasy == "TRUE")
 fantasy_vote_average$Fantasy <- str_replace(fantasy_vote_average$Fantasy, "TRUE", "Fantasy")
 
-mystery_vote_average <- movies %>%
+mystery_vote_average <- movies_new %>%
   select(c('Mystery', 'vote_average')) %>%
   filter(Mystery == "TRUE")
 mystery_vote_average$Mystery <- str_replace(mystery_vote_average$Mystery, "TRUE", "Mystery")
 
-sciencefiction_vote_average <- movies %>%
+sciencefiction_vote_average <- movies_new %>%
   select(c('Science Fiction', 'vote_average')) %>%
   filter(`Science Fiction` == "TRUE")
 sciencefiction_vote_average$`Science Fiction` <- str_replace(sciencefiction_vote_average$`Science Fiction`, "TRUE", "Science Fiction")
 
-romance_vote_average <- movies %>%
+romance_vote_average <- movies_new %>%
   select(c('Romance', 'vote_average')) %>%
   filter(Romance == "TRUE") 
 romance_vote_average$Romance <- str_replace(romance_vote_average$Romance, "TRUE", "Romance")
 
-tvmovie_vote_average <- movies %>%
+tvmovie_vote_average <- movies_new %>%
   select(c('TV Movie', 'vote_average')) %>%
   filter(`TV Movie` == "TRUE") 
 tvmovie_vote_average$`TV Movie` <- str_replace(tvmovie_vote_average$`TV Movie`, "TRUE", "TV Movie")
 
-thriller_vote_average <- movies %>%
+thriller_vote_average <- movies_new %>%
   select(c('Thriller', 'vote_average')) %>%
   filter(Thriller == "TRUE") 
 thriller_vote_average$Thriller <- str_replace(thriller_vote_average$Thriller, "TRUE", "Thriller")
 
-war_vote_average <- movies %>%
+war_vote_average <- movies_new %>%
   select(c('War', 'vote_average')) %>%
   filter(War == "TRUE") 
 war_vote_average$War <- str_replace(war_vote_average$War, "TRUE", "War")
 
-western_vote_average <- movies %>%
+western_vote_average <- movies_new %>%
   select(c('Western', 'vote_average')) %>%
   filter(Western == "TRUE") 
 western_vote_average$Western <- str_replace(western_vote_average$Western, "TRUE", "Western")
@@ -351,7 +376,6 @@ ggplot() +
   geom_boxplot(data = mystery_vote_average, aes(x = Mystery, y = vote_average, color = Mystery)) +
   geom_boxplot(data = sciencefiction_vote_average, aes(x = `Science Fiction`, y = vote_average, color = `Science Fiction`)) +
   geom_boxplot(data = romance_vote_average, aes(x = Romance, y = vote_average, color = Romance)) +
-  geom_boxplot(data = tvmovie_vote_average, aes(x = `TV Movie`, y = vote_average, color = `TV Movie`)) +
   geom_boxplot(data = thriller_vote_average, aes(x = Thriller, y = vote_average, color = Thriller)) +
   geom_boxplot(data = war_vote_average, aes(x = War, y = vote_average, color = War)) +
   geom_boxplot(data = western_vote_average, aes(x = Western, y = vote_average, color = Western)) +
@@ -362,31 +386,22 @@ ggplot() +
   scale_colour_discrete("Genres")
 ```
 
-# Movies' Original Languages
-```{r languages}
-ggplot(movies,aes(x=original_language,fill=original_language))+
-         geom_histogram(stat="count",aes(y=..count../sum(..count..)),binwidth=1)+
-        theme(axis.text.x=element_text(angle=90,hjust=0.5,vjust=0),legend.position="none")+
-         labs(y="Percent",title="Languages")
-```
-
 # Correlation Plot 
 ```{r correlation plot}
-numeric_columns <- sapply(movies, is.numeric)
-movies_numeric<- movies[,numeric_columns]
-Correlation_of_movies <-cor(movies_numeric)
+numeric_columns <- sapply(movies_new, is.numeric)
+movies_numeric <- movies_new[,numeric_columns]
+correlation_of_movies <- cor(movies_numeric)
 corrplot(correlation_of_movies, method = "color",col = brewer.pal(n = 10, name = 'BuPu'))
-Correlation_of_movies
 ```
 
 # Correlation Analysis 
 ```{r correlation analysis}
-Correlation_of_movies
+correlation_of_movies
 ```
 
 # Voting average and popularity 
 ```{r vote popularity}
-vote_popularity <- ggplot(movies, aes(vote_average, popularity)) + 
+vote_popularity <- ggplot(movies_new, aes(vote_average, popularity)) + 
   geom_point(color = "orange") + 
   labs(x = "Vote Average",
        y = "Popularity",
@@ -396,7 +411,7 @@ vote_popularity
 
 # Voting average and budget 
 ```{r vote budget}
-vote_budget <- ggplot(movies, aes(vote_average, budget)) +
+vote_budget <- ggplot(movies_new, aes(vote_average, budget)) +
   geom_point(colour = "purple") +
   labs(x = "Vote Average",
        y = "Budget",
