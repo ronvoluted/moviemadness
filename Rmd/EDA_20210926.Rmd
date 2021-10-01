@@ -378,6 +378,7 @@ ggplot() +
 ```{r correlation plot}
 numeric_columns <- sapply(movies, is.numeric)
 movies_numeric <- movies[,numeric_columns]
+movies_numeric <- subset(movies_numeric, select = -c(id))
 correlation_of_movies <- cor(movies_numeric)
 corrplot(correlation_of_movies, method = "color",col = brewer.pal(n = 10, name = 'BuPu'))
 ```
